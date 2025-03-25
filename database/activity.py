@@ -14,6 +14,25 @@ def mark_as_viewed(user_id, apartment_id):
         ''', (user_id, apartment_id))
         conn.commit()
 
+def is_apartment_viewed(user_id, apartment_id):
+    """Проверяет, была ли квартира уже просмотрена пользователем"""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT viewed FROM user_activity WHERE user_id = ? AND apartment_id = ?
+    ''', (user_id, apartment_id))
+    result = cursor.fetchone()
+
+    # Закрытие соединения
+    conn.close()
+
+    # Если результат есть, возвращаем состояние поля 'viewed' (1 - просмотрена, 0 - не просмотрена)
+    if result:
+        return result[0] == 1  # True, если квартира была просмотрена
+    else:
+        return False  # Если нет записи, то квартира не была просмотрена
+
+
 
 
 def mark_as_liked(user_id, apartment_id):
