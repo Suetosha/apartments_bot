@@ -3,30 +3,28 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, FSInputFile, InputMediaPhoto
 
-from dotenv import load_dotenv
 
-from database.activity import mark_as_liked, mark_as_viewed, mark_as_unliked, get_liked_apartments, is_apartment_viewed
+from database.activity import *
 from database.apartments import get_apartments_by_filter, get_apartment
 from database.users import get_username
-from keyboards.tenant_kb import get_feedback_keyboard, favorite_apartment_selection_kb, favorites_kb, \
-    get_meters_keyboard, view_keyboard, generate_city_keyboard
-from lexicon.lexicon import LEXICON, get_apartment_info
+from keyboards.tenant_kb import feedback_kb, favorite_apartment_selection_kb, favorites_kb, \
+    meters_kb, view_kb, generate_city_kb
+from lexicon.lexicon import LEXICON, get_apartment_info, get_result_text
 from utils.callback_factories import GetApartmentCallbackFactory, DeleteFavoriteCallbackFactory
 from utils.fsm import FSMFillFilter
 
 from database.filter import save_filter, get_user_filters
 
-load_dotenv()
+
 router = Router()
 
 
-# Хэндлер для старта заполнения формы
+# Хэндлер для начала заполнения формы
 @router.callback_query(lambda c: c.data == "start_filter")
 async def start_fill_form(callback_query: CallbackQuery, state: FSMContext):
-    # Получаем ID ранее отправленного сообщения
     user_data = await state.get_data()
     sent_message_id = user_data.get("message_id")
-    keyboard = await generate_city_keyboard()
+    keyboard = await generate_city_kb()
 
     sent_message = await callback_query.message.bot.edit_message_text(
         text=LEXICON['choose_city_tenant'],
@@ -42,17 +40,13 @@ async def start_fill_form(callback_query: CallbackQuery, state: FSMContext):
 # Хэндлер для получения города
 @router.callback_query(StateFilter(FSMFillFilter.city))
 async def process_city(callback_query: CallbackQuery, state: FSMContext):
-    city = callback_query.data  # Используем data из callback_query
-
-    # Сохраняем город в данные состояния
+    city = callback_query.data
     await state.update_data(city=city)
 
-    # Получаем ID ранее отправленного сообщения
     user_data = await state.get_data()
     sent_message_id = user_data.get("message_id")
 
-    # Создаём клавиатуру с вариантами метража
-    keyboard = get_meters_keyboard()
+    keyboard = await meters_kb()
 
     sent_message = await callback_query.message.bot.edit_message_text(
         LEXICON['choose_meters_tenant'],
@@ -61,7 +55,6 @@ async def process_city(callback_query: CallbackQuery, state: FSMContext):
         reply_markup=keyboard
     )
 
-    # Переход к следующему состоянию
     await state.update_data(message_id=sent_message.message_id)
     await state.set_state(FSMFillFilter.meters)
 
@@ -69,29 +62,19 @@ async def process_city(callback_query: CallbackQuery, state: FSMContext):
 # Хэндлер для получения метража
 @router.callback_query(StateFilter(FSMFillFilter.meters))
 async def process_meters(callback_query: CallbackQuery, state: FSMContext):
-    # Получаем ID ранее отправленного сообщения
     user_data = await state.get_data()
     sent_message_id = user_data.get("message_id")
+    user_id = callback_query.from_user.id
 
     meters = callback_query.data
-
-    # Получаем данные из состояния
     data = await state.get_data()
 
-    # Обновляем данные в состоянии
     await state.update_data(meters=meters)
 
-    # Формируем сообщение с результатами
-    result_text = (
-        f"🔹 Город: {data.get('city')}\n"
-        f"🔹 Метры: {meters}"
-    )
-
-    user_id = callback_query.from_user.id
     save_filter(user_id, data.get('city'), meters)
 
-    # Создаем кнопку для начала просмотра квартир
-    keyboard = view_keyboard()
+    result_text = get_result_text(data.get('city'), meters)
+    keyboard = await view_kb()
 
     await callback_query.message.bot.edit_message_text(
         f"Спасибо! Вот твои параметры:\n\n{result_text}",
@@ -123,10 +106,10 @@ async def start_viewing_apartments(callback_query: types.CallbackQuery, state: F
         await callback_query.message.answer(LEXICON['apartments_doesnt_exist'])
 
 
+# Функция для обновления сообщения с квартирой
 async def show_apartment(message, state, apartment):
-    """ Обновляет сообщение с квартирой """
 
-    keyboard = get_feedback_keyboard()
+    keyboard = await feedback_kb()
     username = get_username(apartment[1])
 
     photo_path = apartment[7]
@@ -165,15 +148,16 @@ async def show_apartment(message, state, apartment):
             )
 
             await state.update_data(current_message_id=sent_message.message_id)
+
     except Exception as error:
         print('error', error)
 
     await state.update_data(current_apartment_id=apartment[0])
 
 
+# Хэндлер для обработки лайков и смены квартиры за счет индекса
 @router.callback_query(lambda c: c.data in ["like", "dislike"])
 async def process_apartment_feedback(callback_query: types.CallbackQuery, state: FSMContext):
-    """ Обрабатывает лайки"""
     user_id = callback_query.from_user.id
     action = callback_query.data
 
@@ -215,6 +199,7 @@ async def process_apartment_feedback(callback_query: types.CallbackQuery, state:
     await callback_query.answer()
 
 
+# Хэндлер для получения избранной квартиры
 @router.callback_query(GetApartmentCallbackFactory.filter())
 async def get_apartment_callback(callback: CallbackQuery, callback_data: GetApartmentCallbackFactory):
     apartment = get_apartment(callback_data.apartment_id)
@@ -229,15 +214,19 @@ async def get_apartment_callback(callback: CallbackQuery, callback_data: GetApar
         username=username,
 
     )
+    keyboard = await favorite_apartment_selection_kb(callback_data.user_id,
+                                               callback_data.apartment_id,
+                                               callback_data.message_id
+                                               )
 
     await callback.message.answer_photo(
                                   photo=FSInputFile(apartment[7]),
                                   caption=apartment_info,
                                   parse_mode='HTML',
-                                  reply_markup=favorite_apartment_selection_kb(
-                                      callback_data.user_id, callback_data.apartment_id, callback_data.message_id))
+                                  reply_markup=keyboard)
 
 
+# Хэндлер для удаления избранной квартиры
 @router.callback_query(DeleteFavoriteCallbackFactory.filter())
 async def delete_favorite_callback(callback: CallbackQuery, callback_data: DeleteFavoriteCallbackFactory):
     user_id = callback_data.user_id
@@ -246,7 +235,7 @@ async def delete_favorite_callback(callback: CallbackQuery, callback_data: Delet
     mark_as_unliked(user_id, apartment)
 
     liked_apartments = get_liked_apartments(user_id)
-    keyboard = favorites_kb(liked_apartments, user_id, message_id=message_id)
+    keyboard = await favorites_kb(liked_apartments, user_id, message_id=message_id)
 
     await callback.message.delete()
     await callback.message.bot.edit_message_text(LEXICON['apartments_list'],

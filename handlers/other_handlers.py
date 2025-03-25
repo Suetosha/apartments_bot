@@ -3,12 +3,10 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from dotenv import load_dotenv
 from lexicon.lexicon import LEXICON
 
-
-load_dotenv()
 router = Router()
+
 
 @router.callback_query(F.data == 'cancel')
 async def process_cancel_press(callback: CallbackQuery):
