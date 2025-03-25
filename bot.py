@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 
 from aiogram import Dispatcher, Bot
@@ -14,29 +15,36 @@ from keyboards.main_menu import set_main_menu
 load_dotenv()
 
 
-async def main() -> None:
-    try:
-        token = os.getenv('TOKEN')
+async def start_bot() -> None:
+    while True:
+        try:
+            token = os.getenv('TOKEN')
+            if not token:
+                raise ValueError("Отсутствует токен бота!")
 
-        bot = Bot(token=token, default=DefaultBotProperties(parse_mode='HTML'))
-        dp = Dispatcher()
+            bot = Bot(token=token, default=DefaultBotProperties(parse_mode='HTML'))
+            dp = Dispatcher()
 
-        await set_main_menu(bot)
+            await set_main_menu(bot)
+            init_db()
 
-        init_db()
-        load_apartments_from_csv()
+            dp.include_router(main_handlers.router)
+            dp.include_router(landlord_handlers.router)
+            dp.include_router(tenant_handlers.router)
+            dp.include_router(other_handlers.router)
 
-        dp.include_router(main_handlers.router)
-        dp.include_router(landlord_handlers.router)
-        dp.include_router(tenant_handlers.router)
-        dp.include_router(other_handlers.router)
+            logging.info("Бот запущен!")
+            await dp.start_polling(bot)
 
-
-        await dp.start_polling(bot)
-
-    except Exception as error:
-        print(error)
+        except Exception as error:
+            logging.error(f"Ошибка в работе бота: {error}", exc_info=True)
+            await asyncio.sleep(5)
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+    try:
+        asyncio.run(start_bot())
+    except KeyboardInterrupt:
+        logging.info("Бот остановлен вручную.")
