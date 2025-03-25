@@ -13,15 +13,8 @@ class FSMFillForm(StatesGroup):
     photo = State()
     title = State()
     description = State()
+    confirmation = State()
 
-
-class FSMEditForm(StatesGroup):
-    city = State()
-    meters = State()
-    price = State()
-    photo = State()
-    title = State()
-    description = State()
 
 
 
