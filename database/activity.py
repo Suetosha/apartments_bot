@@ -46,7 +46,7 @@ def mark_as_liked(user_id, apartment_id):
     conn.close()
 
 
-# Обновляет значение liked = 0, в случае, если пользователь убрал квартиру из избранного
+# Обновляет значение liked = 0, в случае, если пользователь удалил квартиру из избранного
 def mark_as_unliked(user_id, apartment_id):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -55,7 +55,7 @@ def mark_as_unliked(user_id, apartment_id):
     INSERT INTO user_activity (user_id, apartment_id, viewed, liked) 
     VALUES (?, ?, 1, 0) 
     ON CONFLICT(user_id, apartment_id) DO UPDATE 
-    SET viewed = 1, liked
+    SET viewed = 1, liked = 0
     ''', (user_id, apartment_id))
 
     conn.commit()

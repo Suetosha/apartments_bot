@@ -24,7 +24,7 @@ router = Router()
 async def start_fill_form(callback_query: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     sent_message_id = user_data.get("message_id")
-    keyboard = await generate_city_kb()
+    keyboard = generate_city_kb()
 
     sent_message = await callback_query.message.bot.edit_message_text(
         text=LEXICON['choose_city_tenant'],
@@ -46,7 +46,7 @@ async def process_city(callback_query: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     sent_message_id = user_data.get("message_id")
 
-    keyboard = await meters_kb()
+    keyboard = meters_kb()
 
     sent_message = await callback_query.message.bot.edit_message_text(
         LEXICON['choose_meters_tenant'],
@@ -74,7 +74,7 @@ async def process_meters(callback_query: CallbackQuery, state: FSMContext):
     save_filter(user_id, data.get('city'), meters)
 
     result_text = get_result_text(data.get('city'), meters)
-    keyboard = await view_kb()
+    keyboard = view_kb()
 
     await callback_query.message.bot.edit_message_text(
         f"Спасибо! Вот твои параметры:\n\n{result_text}",
@@ -109,7 +109,7 @@ async def start_viewing_apartments(callback_query: types.CallbackQuery, state: F
 # Функция для обновления сообщения с квартирой
 async def show_apartment(message, state, apartment):
 
-    keyboard = await feedback_kb()
+    keyboard = feedback_kb()
     username = get_username(apartment[1])
 
     photo_path = apartment[7]
@@ -214,7 +214,7 @@ async def get_apartment_callback(callback: CallbackQuery, callback_data: GetApar
         username=username,
 
     )
-    keyboard = await favorite_apartment_selection_kb(callback_data.user_id,
+    keyboard = favorite_apartment_selection_kb(callback_data.user_id,
                                                callback_data.apartment_id,
                                                callback_data.message_id
                                                )
@@ -230,12 +230,12 @@ async def get_apartment_callback(callback: CallbackQuery, callback_data: GetApar
 @router.callback_query(DeleteFavoriteCallbackFactory.filter())
 async def delete_favorite_callback(callback: CallbackQuery, callback_data: DeleteFavoriteCallbackFactory):
     user_id = callback_data.user_id
-    apartment = callback_data.apartment_id
+    apartment_id = callback_data.apartment_id
     message_id = callback_data.message_id
-    mark_as_unliked(user_id, apartment)
+    mark_as_unliked(user_id, apartment_id)
 
     liked_apartments = get_liked_apartments(user_id)
-    keyboard = await favorites_kb(liked_apartments, user_id, message_id=message_id)
+    keyboard = favorites_kb(liked_apartments, user_id, message_id=message_id)
 
     await callback.message.delete()
     await callback.message.bot.edit_message_text(LEXICON['apartments_list'],
