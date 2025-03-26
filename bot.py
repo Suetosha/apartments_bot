@@ -33,6 +33,8 @@ async def start_bot() -> None:
             dp.include_router(tenant_handlers.router)
             dp.include_router(other_handlers.router)
 
+            #load_apartments_from_csv()
+
             logging.info("Бот запущен!")
             await dp.start_polling(bot)
 

@@ -1,6 +1,5 @@
 from aiogram import Bot
-from aiogram.types import BotCommand
-
+from aiogram.types import BotCommand, InlineKeyboardMarkup, InlineKeyboardButton
 
 # Лексикон команд
 COMMAND_LEXICON = {
@@ -23,5 +22,17 @@ async def set_main_menu(bot: Bot):
 
     ]
     await bot.set_my_commands(main_menu_commands)
+
+
+
+async def options_menu_kb():
+    buttons = [
+        [InlineKeyboardButton(text="Найти квартиру", callback_data="start_filter")],
+        [InlineKeyboardButton(text="Сдать квартиру", callback_data="list_an_apartment")]
+    ]
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    return keyboard
 
 

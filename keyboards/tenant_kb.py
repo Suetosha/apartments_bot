@@ -5,7 +5,7 @@ from lexicon.lexicon import LEXICON
 from utils.callback_factories import GetApartmentCallbackFactory, DeleteFavoriteCallbackFactory
 
 
-def favorites_kb(favorites, user_id, message_id):
+async def favorites_kb(favorites, user_id, message_id):
 
     favorites_buttons = [[InlineKeyboardButton(text=f"{row[1]} - {row[2]} руб",
                                                 callback_data=GetApartmentCallbackFactory(user_id=user_id,
@@ -22,7 +22,7 @@ def favorites_kb(favorites, user_id, message_id):
     return favorites_keyboard
 
 
-def favorite_apartment_selection_kb(user_id, apartment_id, message_id):
+async def favorite_apartment_selection_kb(user_id, apartment_id, message_id):
     buttons = [[InlineKeyboardButton(text='Удалить',
                               callback_data=DeleteFavoriteCallbackFactory(
                                   user_id=user_id,
@@ -37,7 +37,7 @@ def favorite_apartment_selection_kb(user_id, apartment_id, message_id):
     return selection_kb
 
 
-def get_feedback_keyboard():
+async def feedback_kb():
     buttons = [
         [InlineKeyboardButton(text="Нравится", callback_data="like")],
         [InlineKeyboardButton(text="Не нравится", callback_data="dislike")]
@@ -46,7 +46,7 @@ def get_feedback_keyboard():
     return keyboard
 
 
-def get_meters_keyboard():
+async def meters_kb():
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="20 - 40 м²", callback_data="20 - 40 м²")],
@@ -60,16 +60,16 @@ def get_meters_keyboard():
     return keyboard
 
 
-def view_keyboard():
+async def view_kb():
     start_viewing_button = InlineKeyboardButton(text=LEXICON['press_for_view'], callback_data="view_apartments")
     keyboard = InlineKeyboardMarkup(resize_keyboard=True, inline_keyboard=[[start_viewing_button]])
     return keyboard
 
 
 
-async def generate_city_keyboard():
+async def generate_city_kb():
     """Генерирует клавиатуру на основе уникальных городов из базы данных."""
-    cities = get_unique_cities()  # Получаем список уникальных городов
+    cities = get_unique_cities()
     keyboard = InlineKeyboardMarkup(resize_keyboard=True, inline_keyboard=[])
 
     for city in cities:
@@ -77,4 +77,16 @@ async def generate_city_keyboard():
         button = InlineKeyboardButton(text=city, callback_data=city)
         keyboard.inline_keyboard.append([button])
 
+    return keyboard
+
+
+async def start_view_kb():
+    button = InlineKeyboardButton(text=LEXICON['start_view'], callback_data="view_apartments")
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
+    return keyboard
+
+
+async def edit_filter_kb():
+    button = InlineKeyboardButton(text=LEXICON['edit_filter'], callback_data="start_filter")
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
     return keyboard

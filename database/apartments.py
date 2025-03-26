@@ -2,7 +2,6 @@ import csv
 import re
 import sqlite3
 
-from database.activity import is_apartment_viewed
 
 
 def add_apartment(user_id, title, price, city, meters, description, photo):
@@ -85,52 +84,6 @@ def get_apartments_by_landlord(user_id):
     conn.close()
 
     return results
-
-
-def get_apartment_by_id(apartment_id):
-    """Функция для извлечения квартиры из БД по ее ID."""
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM apartments WHERE id = ?", (apartment_id,))
-    apartment_data = cursor.fetchone()
-    conn.close()
-
-    if apartment_data:
-        apartment = {
-            'id': apartment_data[0],  # id квартиры
-            'user_id': apartment_data[1],  # user_id
-            'title': apartment_data[2],  # title
-            'price': apartment_data[3],  # price
-            'city': apartment_data[4],  # city
-            'meters': apartment_data[5],  # meters
-            'description': apartment_data[6]  # description
-        }
-        return apartment
-    else:
-        return None
-
-
-def update_apartment(apartment_id, title, price, city, meters, description, photo):
-    """Обновляет данные квартиры по ID в базе данных."""
-    try:
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-
-        # SQL запрос для обновления данных квартиры
-        query = '''
-            UPDATE apartments
-            SET title = ?, price = ?, city = ?, meters = ?, description = ?, photo = ?
-            WHERE id = ?
-        '''
-
-        # Выполнение запроса
-        cursor.execute(query, (title, price, city, meters, description, photo, apartment_id))
-
-        # Сохраняем изменения в базе данных
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"Произошла ошибка: {e}")
 
 
 def delete_apartment(apartment_id):

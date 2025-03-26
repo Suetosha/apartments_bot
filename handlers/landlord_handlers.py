@@ -19,7 +19,6 @@ from utils.validations import *
 router = Router()
 
 
-
 @router.callback_query(lambda c: c.data == "list_an_apartment")
 async def start_landlord_form(callback_query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
@@ -33,7 +32,8 @@ async def start_landlord_form(callback_query: CallbackQuery, state: FSMContext):
     )
     await state.set_state(FSMFillForm.city)
 
-#                             Заполнение/редактирование формы
+
+#                          Заполнение/редактирование формы
 
 @router.message(StateFilter(FSMFillForm.city))
 async def process_city(message: Message, state: FSMContext):
@@ -42,7 +42,7 @@ async def process_city(message: Message, state: FSMContext):
     data = await state.get_data()
 
     if validated_city:
-        # Если это редактирование (есть сохраненные данные)
+        # Если это редактирование
         if data.get('edit_mode'):
             await state.update_data(city=validated_city)
             await message.answer("Город обновлен")
@@ -60,12 +60,11 @@ async def process_city(message: Message, state: FSMContext):
 @router.message(StateFilter(FSMFillForm.meters))
 async def process_meters(message: Message, state: FSMContext):
     meters = message.text
-    user_id = message.from_user.id
 
     if validate_meters(meters):
         data = await state.get_data()
 
-        # Если это редактирование (есть apartment_id)
+        # Если это редактирование
         if data.get('edit_mode'):
             await state.update_data(meters=meters)
             await message.answer("Площадь обновлена")
@@ -80,16 +79,14 @@ async def process_meters(message: Message, state: FSMContext):
         await message.answer(LEXICON['meters_bad_format'])
 
 
-
 @router.message(StateFilter(FSMFillForm.price))
 async def process_price(message: Message, state: FSMContext):
     price = message.text
-    user_id = message.from_user.id
 
     if validate_price(price):
         data = await state.get_data()
 
-        # Если это редактирование (есть apartment_id)
+        # Если это редактирование
         if data.get('edit_mode'):
             await state.update_data(price=price)
             await message.answer("Цена обновлена")
@@ -104,10 +101,8 @@ async def process_price(message: Message, state: FSMContext):
         await message.answer(LEXICON['price_bad_format'])
 
 
-
 @router.message(StateFilter(FSMFillForm.photo))
 async def process_photo(message: Message, state: FSMContext):
-    user_id = message.from_user.id
     data = await state.get_data()
 
     try:
@@ -150,7 +145,6 @@ async def process_title(message: Message, state: FSMContext):
     await state.update_data(title=title)
     user_id = message.from_user.id
 
-
     # Если это редактирование (есть apartment_id), завершаем процесс
     if data.get('edit_mode'):
         await message.answer("Заголовок обновлен")
@@ -159,7 +153,6 @@ async def process_title(message: Message, state: FSMContext):
         # Если это первый ввод
         await state.set_state(FSMFillForm.description)
         await message.answer(text=LEXICON['choose_description_landlord'])
-
 
 
 @router.message(StateFilter(FSMFillForm.description))
@@ -177,7 +170,6 @@ async def process_description(message: Message, state: FSMContext):
         await state.set_state(FSMFillForm.confirmation)
         await message.answer(LEXICON['confirmation_landlord'])
         await finish_process(message, state)
-
 
 
 @router.message(StateFilter(FSMFillForm.confirmation))
@@ -279,7 +271,7 @@ async def process_edit_choice(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.message.answer(messages[field])
 
 
-
+#                              Получение и удаление опубликованных квартир
 @router.callback_query(GetPublishedApartmentCallbackFactory.filter())
 async def get_published_apartment_callback(callback: CallbackQuery,
                                            callback_data: GetPublishedApartmentCallbackFactory):
@@ -297,21 +289,20 @@ async def get_published_apartment_callback(callback: CallbackQuery,
 
         )
 
-        keyboard = published_apartment_selection_kb(callback_data.apartment_id,callback_data.message_id)
+        keyboard = published_apartment_selection_kb(callback_data.apartment_id, callback_data.message_id)
 
         await callback.message.answer_photo(
-                                      caption=apartment_info,
-                                      photo=FSInputFile(apartment[7]),
-                                      parse_mode='HTML',
-                                      reply_markup=keyboard)
+            caption=apartment_info,
+            photo=FSInputFile(apartment[7]),
+            parse_mode='HTML',
+            reply_markup=keyboard)
     except Exception as error:
         print(error)
         await callback.answer(LEXICON['error'])
 
 
-
 @router.callback_query(DeletePublishedCallbackFactory.filter())
-async def delete_favorite_callback(callback: CallbackQuery, callback_data: DeletePublishedCallbackFactory):
+async def delete_published_callback(callback: CallbackQuery, callback_data: DeletePublishedCallbackFactory):
     try:
         user_id = callback.from_user.id
         apartment_id = callback_data.apartment_id
@@ -320,7 +311,7 @@ async def delete_favorite_callback(callback: CallbackQuery, callback_data: Delet
         delete_apartment(apartment_id)
 
         published_apartments = get_apartments_by_landlord(user_id)
-        keyboard = landlord_apartments_kb(published_apartments, message_id)
+        keyboard = published_apartments_kb(published_apartments, message_id)
 
         await callback.message.delete()
         await callback.message.bot.edit_message_text(LEXICON['apartments_list'],

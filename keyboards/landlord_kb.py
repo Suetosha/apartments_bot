@@ -3,9 +3,8 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from utils.callback_factories import GetPublishedApartmentCallbackFactory, EditPublishedApartmentCallbackFactory, \
     DeletePublishedCallbackFactory
 
-
-def landlord_apartments_kb(apartments, message_id):
-    """Создаёт клавиатуру с квартирами арендодателя и кнопкой 'Отменить'"""
+# Создаёт клавиатуру с квартирами арендодателя и кнопкой 'Отменить'
+def published_apartments_kb(apartments, message_id):
 
     apartments_buttons = [
         [InlineKeyboardButton(
@@ -18,34 +17,13 @@ def landlord_apartments_kb(apartments, message_id):
         for row in apartments
     ]
 
-    # Кнопка отменить
-    action_buttons = [
+    cancel_buttons = [
         InlineKeyboardButton(text='Отменить', callback_data='cancel')
     ]
 
-    landlord_keyboard = InlineKeyboardMarkup(inline_keyboard=apartments_buttons + [action_buttons])
+    landlord_keyboard = InlineKeyboardMarkup(inline_keyboard=apartments_buttons + [cancel_buttons])
 
     return landlord_keyboard
-
-
-def landlord_apartment_selection_kb(user_id, apartment_id, message_id):
-    """Создаёт клавиатуру с кнопками 'Изменить' и 'Отменить' для арендодателя."""
-
-    buttons = [[InlineKeyboardButton(
-        text='Изменить',
-        callback_data=EditPublishedApartmentCallbackFactory(
-            user_id=user_id,
-            apartment_id=apartment_id,
-            message_id=message_id
-        ).pack()
-    )]]
-
-    cancel_btn = [InlineKeyboardButton(text='Отменить', callback_data='cancel')]
-
-    selection_kb = InlineKeyboardMarkup(inline_keyboard=buttons + [cancel_btn])
-    return selection_kb
-
-
 
 def published_apartment_selection_kb(apartment_id, message_id):
     buttons = [[InlineKeyboardButton(text='Удалить',
@@ -83,3 +61,5 @@ def edit_part_kb():
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyboard
+
+
