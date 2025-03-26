@@ -28,7 +28,7 @@ async def process_start_command(message: Message, state: FSMContext):
     username = message.from_user.username
     save_user(user_id, username)
 
-    keyboard = await options_menu_kb()
+    keyboard = options_menu_kb()
     sent_message = await message.answer(LEXICON['start'], reply_markup=keyboard)
     await state.update_data(message_id=sent_message.message_id)
 
@@ -38,7 +38,7 @@ async def process_start_command(message: Message, state: FSMContext):
 async def view_apartments_command(message: Message, state: FSMContext):
     await state.clear()
 
-    keyboard = await start_view_kb()
+    keyboard = start_view_kb()
     await message.answer(LEXICON['press_for_view'], reply_markup=keyboard)
 
 
@@ -48,7 +48,7 @@ async def filter_command(message: Message, state: FSMContext):
     await state.clear()
     user_id = message.from_user.id
 
-    keyboard = await edit_filter_kb()
+    keyboard = edit_filter_kb()
 
     filter_data = get_user_filters(user_id)
 
@@ -71,7 +71,7 @@ async def favorites_command(message: Message, state: FSMContext):
     sent_message = await message.answer(LEXICON['favorite_list'])
     message_id = sent_message.message_id
 
-    keyboard = await favorites_kb(liked_apartments, user_id, message_id=message_id)
+    keyboard = favorites_kb(liked_apartments, user_id, message_id=message_id)
 
     await sent_message.edit_text(LEXICON['favorite_list'], reply_markup=keyboard)
 
