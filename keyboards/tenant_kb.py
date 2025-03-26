@@ -5,15 +5,15 @@ from lexicon.lexicon import LEXICON
 from utils.callback_factories import GetApartmentCallbackFactory, DeleteFavoriteCallbackFactory
 
 
-async def favorites_kb(favorites, user_id, message_id):
-
+# Получение избранных квартир в виде кнопок
+def favorites_kb(favorites, user_id, message_id):
     favorites_buttons = [[InlineKeyboardButton(text=f"{row[1]} - {row[2]} руб",
-                                                callback_data=GetApartmentCallbackFactory(user_id=user_id,
-                                                                                          apartment_id=row[0],
-                                                                                          message_id=message_id
+                                               callback_data=GetApartmentCallbackFactory(user_id=user_id,
+                                                                                         apartment_id=row[0],
+                                                                                         message_id=message_id
 
-                                                                                          ).pack())]
-                          for row in favorites]
+                                                                                         ).pack())]
+                         for row in favorites]
 
     cancel_btn = [InlineKeyboardButton(text='Отменить', callback_data='cancel')]
 
@@ -22,14 +22,14 @@ async def favorites_kb(favorites, user_id, message_id):
     return favorites_keyboard
 
 
-async def favorite_apartment_selection_kb(user_id, apartment_id, message_id):
+# Получение кнопок 'Удалить' и 'Отменить' для взаимодействия с избранными квартирами
+def favorite_apartment_selection_kb(user_id, apartment_id, message_id):
     buttons = [[InlineKeyboardButton(text='Удалить',
-                              callback_data=DeleteFavoriteCallbackFactory(
-                                  user_id=user_id,
-                                  apartment_id=apartment_id,
-                                  message_id=message_id)
-                              .pack())]]
-
+                                     callback_data=DeleteFavoriteCallbackFactory(
+                                         user_id=user_id,
+                                         apartment_id=apartment_id,
+                                         message_id=message_id)
+                                     .pack())]]
 
     cancel_btn = [InlineKeyboardButton(text='Отменить', callback_data='cancel')]
 
@@ -37,7 +37,8 @@ async def favorite_apartment_selection_kb(user_id, apartment_id, message_id):
     return selection_kb
 
 
-async def feedback_kb():
+# Получение кнопок "Нравится" и "Не нравится" для взаимодействия с избранными квартирами
+def feedback_kb():
     buttons = [
         [InlineKeyboardButton(text="Нравится", callback_data="like")],
         [InlineKeyboardButton(text="Не нравится", callback_data="dislike")]
@@ -46,7 +47,8 @@ async def feedback_kb():
     return keyboard
 
 
-async def meters_kb():
+# Получение кнопок с метрами
+def meters_kb():
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="20 - 40 м²", callback_data="20 - 40 м²")],
@@ -60,33 +62,34 @@ async def meters_kb():
     return keyboard
 
 
-async def view_kb():
+# Кнопка для получения квартир к просмотру
+def view_kb():
     start_viewing_button = InlineKeyboardButton(text=LEXICON['press_for_view'], callback_data="view_apartments")
     keyboard = InlineKeyboardMarkup(resize_keyboard=True, inline_keyboard=[[start_viewing_button]])
     return keyboard
 
 
-
-async def generate_city_kb():
-    """Генерирует клавиатуру на основе уникальных городов из базы данных."""
+# Получение уникальных городов
+def generate_city_kb():
     cities = get_unique_cities()
     keyboard = InlineKeyboardMarkup(resize_keyboard=True, inline_keyboard=[])
 
     for city in cities:
-        # Создаем кнопку для каждого города
         button = InlineKeyboardButton(text=city, callback_data=city)
         keyboard.inline_keyboard.append([button])
 
     return keyboard
 
 
-async def start_view_kb():
+# Кнопка для просмотра квартир
+def start_view_kb():
     button = InlineKeyboardButton(text=LEXICON['start_view'], callback_data="view_apartments")
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
     return keyboard
 
 
-async def edit_filter_kb():
+# Кнопка для изменения фильтра
+def edit_filter_kb():
     button = InlineKeyboardButton(text=LEXICON['edit_filter'], callback_data="start_filter")
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
     return keyboard

@@ -24,8 +24,7 @@ async def set_main_menu(bot: Bot):
     await bot.set_my_commands(main_menu_commands)
 
 
-
-async def options_menu_kb():
+def options_menu_kb():
     buttons = [
         [InlineKeyboardButton(text="Найти квартиру", callback_data="start_filter")],
         [InlineKeyboardButton(text="Сдать квартиру", callback_data="list_an_apartment")]
@@ -34,5 +33,3 @@ async def options_menu_kb():
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
 
     return keyboard
-
-
